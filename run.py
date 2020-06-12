@@ -134,5 +134,5 @@ def run(args):
     f.close()
 
 if __name__ == "__main__":
-    args.get_arguments()
+    args = get_arguments()
     pass
