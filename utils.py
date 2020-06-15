@@ -258,7 +258,13 @@ class GloVeUtility:
                 https://nlp.stanford.edu/pubs/glove.pdf
         """
         fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
-        progress_bar.std_print("Loading glove vectors . . . ", end='\r')
+        
+        i=0
+        if n:
+            bar = progress_bar(n,"Loading glove vectors")
+        else:
+            progress_bar.std_print("Loading glove vectors . . . ", end='\r')
+        
         data = {}
         for line in fin:
             line = line.strip()
@@ -266,8 +272,14 @@ class GloVeUtility:
             tokens = line.split()
             word = " ".join(tokens[0:len(tokens)-d])
             data[word] = np.array([float(val) for val in tokens[-d:]])
+
+            i+=1
+            if n:
+                bar.update_progress(i)
         
-        progress_bar.std_print("Loading glove vectors compete.")
+        if not n:
+            progress_bar.std_print("Loading glove vectors compete.")
+        
         return data
 
     def compute_ngrams(self, token, min_n=2, max_n=8):
@@ -316,6 +328,11 @@ def read_txt(file):
         doc = " ".join([line.strip() for line in f])
     return doc
 
+def write_txt(path, data):
+    with open(path, 'w') as f:
+        for entry in data:
+            f.write("{}\n".format(entry))
+
 def process_text(text, lower=True, remove_stopwords=True, remove_punctuation=True):
     if lower:
         text = text.lower()
@@ -332,13 +349,15 @@ def process_text(text, lower=True, remove_stopwords=True, remove_punctuation=Tru
     tokens = word_tokenize(text)
     return [token for token in tokens if token not in tokens_for_removal]
 
-def get_rare_tokens(tokens, min_freq, max_tokens, return_non_rare=False):
+def get_rare_tokens(tokens, min_freq, max_tokens=20000, return_non_rare=False):
     rare_tokens = []
     token_freq_tuples = []
 
-    for (k,v) in Counter(tokens):
-        if v>=min_freq:
-            token_freq_tuples.append((k,v))
+    counts = Counter(tokens)
+    for k in counts:
+        count = counts[k]
+        if count>=min_freq:
+            token_freq_tuples.append((k,count))
         else:
             rare_tokens.append(k)
 
