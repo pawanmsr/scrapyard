@@ -1,9 +1,10 @@
+import os
 import argparse
 from mittens import GloVe, Mittens
 from sklearn.feature_extraction.text import CountVectorizer
 
-from utils import GloVeUtility
-from utils import read_txt, process_text, get_rare_tokens, filter_tokens
+from utils import GloVeUtility, progress_bar
+from utils import read_txt, write_txt, process_text, get_rare_tokens, filter_tokens
 
 def get_arguments():
     """Get arguments
@@ -19,10 +20,18 @@ def get_arguments():
 
     parser.add_argument(
         "--path_to_glove",
-        default="data/glove/glove.6B.300d.txt",
+        default="glove/glove.6B.300d.txt",
         type=str,
         help="Provide path to .txt file containing pretrained GloVe vectors.",
         dest="path_to_glove"
+    )
+
+    parser.add_argument(
+        "--output",
+        default="fine_tuned_glove",
+        type=str,
+        help="Output directory",
+        dest="output"
     )
 
     parser.add_argument(
@@ -63,6 +72,13 @@ def get_arguments():
     )
 
     parser.add_argument(
+        "--remove_rare",
+        action="store_true",
+        help="Remove rare tokens from the doc before computing co occurance matrix.",
+        dest="remove_rare"
+    )
+
+    parser.add_argument(
         "--max_tokens",
         default=20000,
         type=int,
@@ -94,7 +110,7 @@ def get_arguments():
         dest="ngram_upper",
     )
 
-    args, unknown = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
     return args
 
 def run(args):
@@ -104,9 +120,11 @@ def run(args):
     
     rare_tokens, selected_tokens = get_rare_tokens(doc_tokens, args.min_freq, args.max_tokens, return_non_rare=True)
     doc_tokens = filter_tokens(doc_tokens, rare_tokens)
-    
+
+    if args.remove_rare:
+        doc_tokens = filter_tokens(doc_tokens, set(rare_tokens))
+
     gu = GloVeUtility(args.path_to_glove)
-    # oov_tokens = gu.get_oov_tokens(doc_tokens, as_set=True)
 
     vectorizer = CountVectorizer(
         ngram_range=(args.ngram_lower, args.ngram_upper),
@@ -120,19 +138,23 @@ def run(args):
     cooccur_ar = csr_mat.toarray()
 
     mittens_model = Mittens(n=gu.d, max_iter=args.iter)
-    new_embeddings = mittens_model.fit(
+    embeddings = mittens_model.fit(
         cooccur_ar,
         vocab=selected_tokens,
         initial_embedding_dict=gu.vector_dict
     )
 
-    new_embeddings = dict(zip(selected_tokens, new_embeddings))
-
-    import pickle
-    f = open("repo_glove.pkl","wb")
-    pickle.dump(new_embeddings, f)
-    f.close()
+    embeddings_dict = dict(zip(selected_tokens, embeddings))
+    embeddings_list = [" ".join(
+        [key] + [str(val) for val in embeddings_dict[key]]
+    ) for key in embeddings_dict]
+    progress_bar.std_print("\nTrained on {} tokens.".format(len(embeddings_dict)))
+    
+    filename = args.path_to_glove.split(os.path.sep)[-1]
+    savepath = os.path.join(args.output, filename)
+    os.makedirs(args.output, exist_ok=True)
+    write_txt(savepath, embeddings_list)
 
 if __name__ == "__main__":
     args = get_arguments()
-    pass
+    run(args)
