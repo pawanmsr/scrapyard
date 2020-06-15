@@ -20,26 +20,26 @@ cd $GLOVE_DIR
 
 ##################################################
 
-# Get GloVe vectors trained on 6B tokens
+# Get GloVe vectors trained on 42B tokens
 # if hash wget 2>/dev/null; then
-#   wget http://downloads.cs.stanford.edu/nlp/data/glove.6B.zip
+#   wget http://downloads.cs.stanford.edu/nlp/data/glove.42B.300d.zip
 # else
-#   curl -O http://downloads.cs.stanford.edu/nlp/data/glove.6B.zip
+#   curl -O http://downloads.cs.stanford.edu/nlp/data/glove.42B.300d.zip
 # fi
 
-# unzip glove.6B.zip
-# rm glove.6B.zip
+# unzip glove.42B.300d.zip
+# rm glove.42B.300d.zip
 
 ##################################################
 
-Get GloVe vectors trained on 42B tokens
+Get GloVe vectors trained on 6B tokens
 if hash wget 2>/dev/null; then
-  wget http://downloads.cs.stanford.edu/nlp/data/glove.42B.300d.zip
+  wget http://downloads.cs.stanford.edu/nlp/data/glove.6B.zip
 else
-  curl -O http://downloads.cs.stanford.edu/nlp/data/glove.42B.300d.zip
+  curl -O http://downloads.cs.stanford.edu/nlp/data/glove.6B.zip
 fi
 
-unzip glove.42B.300d.zip
-rm glove.42B.300d.zip
+unzip glove.6B.zip
+rm glove.6B.zip
 
 ##################################################
