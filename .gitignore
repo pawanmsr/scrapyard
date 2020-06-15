@@ -1,4 +1,5 @@
 data/
 .vscode
-scratchpad.py
-tests.py
+scratchpad*
+test.py
+sample*
