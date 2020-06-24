@@ -62,7 +62,7 @@ def get_arguments():
         action="store_true",
         help="Whether to save only the new embeddings. \
             If not provided the new embeddings will be replaced/added to the pretrained vectors and saved.",
-        dest="remove_stopwords"
+        dest="save_new_only"
     )
 
     parser.add_argument(
