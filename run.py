@@ -58,6 +58,14 @@ def get_arguments():
     )
 
     parser.add_argument(
+        "--save_new_only",
+        action="store_true",
+        help="Whether to save only the new embeddings. \
+            If not provided the new embeddings will be replaced/added to the pretrained vectors and saved.",
+        dest="remove_stopwords"
+    )
+
+    parser.add_argument(
         "--remove_punctuation",
         action="store_true",
         help="Do not consider isolated punctuations in document for training.",
@@ -115,22 +123,26 @@ def get_arguments():
 
 def run(args):
     doc = read_txt(args.path_to_doc)
-    doc_tokens = process_text(doc, lower=not args.cased,
-        remove_stopwords=args.remove_stopwords, remove_punctuation=args.remove_punctuation)
+    doc_tokens = [
+        process_text(entry, lower=not args.cased, 
+        remove_stopwords=args.remove_stopwords, remove_punctuation=args.remove_punctuation) for entry in doc
+    ]
     
-    rare_tokens, selected_tokens = get_rare_tokens(doc_tokens, args.min_freq, args.max_tokens, return_non_rare=True)
-    doc_tokens = filter_tokens(doc_tokens, rare_tokens)
-
+    all_tokens = []
+    for entry_tokens in doc_tokens:
+        all_tokens += entry_tokens
+    
+    rare_tokens, selected_tokens = get_rare_tokens(all_tokens, args.min_freq, args.max_tokens, return_non_rare=True)
     if args.remove_rare:
-        doc_tokens = filter_tokens(doc_tokens, set(rare_tokens))
-
+        doc_tokens = [filter_tokens(entry_tokens, set(rare_tokens)) for entry_tokens in doc_tokens]
+    
     gu = GloVeUtility(args.path_to_glove)
 
     vectorizer = CountVectorizer(
         ngram_range=(args.ngram_lower, args.ngram_upper),
         vocabulary=selected_tokens
     )
-    count_vector = vectorizer.fit_transform([" ".join(doc_tokens)])
+    count_vector = vectorizer.fit_transform([" ".join(entry_tokens) for entry_tokens in doc_tokens])
     
     csr_mat = count_vector.T * count_vector
     csr_mat.setdiag(0)
@@ -144,16 +156,22 @@ def run(args):
         initial_embedding_dict=gu.vector_dict
     )
 
-    embeddings_dict = dict(zip(selected_tokens, embeddings))
-    embeddings_list = [" ".join(
-        [key] + [str(val) for val in embeddings_dict[key]]
-    ) for key in embeddings_dict]
-    progress_bar.std_print("\nTrained on {} tokens.".format(len(embeddings_dict)))
-    
     filename = args.path_to_glove.split(os.path.sep)[-1]
-    savepath = os.path.join(args.output, filename)
     os.makedirs(args.output, exist_ok=True)
-    write_txt(savepath, embeddings_list)
+
+    embeddings_dict = dict(zip(selected_tokens, embeddings))
+    progress_bar.std_print("\nTrained on {} tokens.".format(len(embeddings_dict)))
+
+    if args.save_new_only:
+        savepath = os.path.join(args.output, "new_" + filename)
+        embeddings_list = [" ".join(
+            [key] + [str(val) for val in embeddings_dict[key]]
+        ) for key in embeddings_dict]
+        write_txt(savepath, embeddings_list)
+    else:
+        savepath = os.path.join(args.output, filename)
+        gu.add_replace_vectors(embeddings_dict)
+        gu.save_vectors(savepath)
 
 if __name__ == "__main__":
     args = get_arguments()
