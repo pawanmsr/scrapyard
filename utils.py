@@ -247,7 +247,7 @@ class GloVeUtility:
             self.vector_dict = {}
     
     @staticmethod
-    def load_vectors(fname, d, n=None):
+    def load_vectors(path, d, n=None):
         """
         TODO
 
@@ -257,7 +257,7 @@ class GloVeUtility:
                 Jeffrey Pennington, Richard Socher, and Christopher D. Manning. 2014. GloVe: Global Vectors for Word Representation.
                 https://nlp.stanford.edu/pubs/glove.pdf
         """
-        fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
+        fin = io.open(path, 'r', encoding='utf-8', newline='\n', errors='ignore')
         
         i=0
         if n:
@@ -279,6 +279,7 @@ class GloVeUtility:
         
         if not n:
             progress_bar.std_print("Loading glove vectors compete.")
+        fin.close()
         
         return data
 
@@ -322,14 +323,41 @@ class GloVeUtility:
             return set(oov_tokens)
         return oov_tokens
 
-def read_txt(file):
-    doc = ""
-    with open(file, mode='r', encoding="utf-8", errors="ignore") as f:
-        doc = " ".join([line.strip() for line in f])
+    def add_replace_vectors(self, new_vector_dict):
+        """
+        TODO
+        """
+        bar = progress_bar(len(new_vector_dict), "Adding/replacing vectors")
+        for i, token in enumerate(new_vector_dict):
+            self.vector_dict[token] = new_vector_dict[token]
+            bar.update_progress(i)
+    
+    def save_vectors(self, path):
+        """
+        TODO
+        """
+        vector_list = [" ".join(
+            [key] + [str(val) for val in self.vector_dict[key]]
+        ) for key in self.vector_dict]
+        
+        path_split = path.split(os.path.sep)
+        if len(path_split) > 1:
+            os.makedirs(os.path.sep.join(path_split[:-1]), exist_ok=True)
+        
+        progress_bar.std_print("Saving glove vectors . . . ", end='\r')
+        with open(path, 'w', encoding="utf-8") as f:
+            for entry in vector_list:
+                f.write("{}\n".format(entry))
+        progress_bar.std_print("Saving glove vectors complete.")
+
+def read_txt(path):
+    doc = []
+    with open(path, mode='r', encoding="utf-8", errors="ignore") as f:
+        doc = [line.strip() for line in f]
     return doc
 
 def write_txt(path, data):
-    with open(path, 'w') as f:
+    with open(path, mode='w', encoding="utf-8") as f:
         for entry in data:
             f.write("{}\n".format(entry))
 
