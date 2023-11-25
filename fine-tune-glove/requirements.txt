@@ -1,0 +1,7 @@
+mittens
+scikit-learn
+numpy
+nltk
+
+# Optional
+tensorflow
