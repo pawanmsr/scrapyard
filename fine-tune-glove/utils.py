@@ -1,17 +1,105 @@
+# -*- coding: UTF-8 -*-
+
 import os
 import io
+import csv
 import sys
+import json
 import time
 import string
+import pickle
 import numpy as np
 from collections import Counter
+from configparser import ConfigParser
+
+# Typing
+from typing import Dict, List, Any, Optional, Union
+
+# NLTK
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
-# en_stopwords = stopwords.words("english")
+CONCEPT_DIR = os.path.dirname(os.path.realpath(__file__))
+DUMP_DIR = os.path.join(CONCEPT_DIR, 'dump')
+DATA_DIR = os.path.join(CONCEPT_DIR, 'data')
 
-class progress_bar:
-    """Progress bar
+def create_dir(filepath: str) -> None:
+    dirname = os.path.dirname(filepath)
+    if dirname:
+        os.makedirs(dirname, exist_ok=True)
+
+def save_json(path: str, data: Dict) -> None:
+    create_dir(path)
+    with open(path, 'w') as f:
+        json.dump(data, f)
+
+def save_json_nice(path: str, data: Dict) -> None:
+    create_dir(path)
+    with open(path, 'w', encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+def load_json(path: str) -> Dict:
+    data = None
+    with open(path, 'r', encoding="utf-8") as f:
+        data = json.load(f)
+    return data
+
+def save_tsv(path: str, data: List) -> None:
+    create_dir(path)
+    with open(path, 'w', encoding="utf-8") as f:
+        writer = csv.writer(
+            f,
+            delimiter="\t",
+            quoting=csv.QUOTE_MINIMAL
+        )
+        writer.writerows(data)
+
+def load_tsv(path: str) -> List:
+    data = []
+    with open(path, encoding="utf-8") as f:
+        reader = csv.reader(
+            f,
+            delimiter="\t",
+            quoting=csv.QUOTE_MINIMAL
+        )
+        data = [row for row in reader]
+    return data
+
+def save_csv(path: str, data: List) -> None:
+    with open(path, 'w', encoding="utf-8") as f:
+        writer = csv.writer(
+            f,
+            delimiter=",",
+            quoting=csv.QUOTE_MINIMAL
+        )
+        writer.writerows(data)
+
+def load_csv(path: str) -> List:
+    data = []
+    with open(path, encoding="utf-8") as f:
+        reader = csv.reader(f, delimiter=",", quoting=csv.QUOTE_MINIMAL)
+        data = [row for row in reader]
+    return data
+
+def list_to_string(l: List) -> str:
+    return ", ".join(l) if isinstance(l, list) else l
+
+def get_config(path: str, section: str, key: str) -> Any:
+    config = ConfigParser()
+    config.read(path)
+    return config.get(section, key)
+
+def pickleload(path: str) -> Any:
+    with open(path, 'rb') as f:
+        data = pickle.load(f)
+    return data
+
+def picklesave(data: Any, path: str) -> None:
+    with open(path, 'wb') as f:
+        pickle.dump(data, f)
+
+class ProgressBar:
+    """Progress Bar
 
     Simple progress bar for displaying process progress.
 
@@ -121,15 +209,15 @@ class progress_bar:
         """  
         
         curr_print = start + text
-        if progress_bar.last_print_len is not None \
-            and len(curr_print) < progress_bar.last_print_len:
-            curr_print += ' '*(progress_bar.last_print_len - len(curr_print))
+        if ProgressBar.last_print_len is not None \
+            and len(curr_print) < ProgressBar.last_print_len:
+            curr_print += ' '*(ProgressBar.last_print_len - len(curr_print))
         curr_print += end
 
         if end != '\n':
-            progress_bar.last_print_len = len(curr_print)
+            ProgressBar.last_print_len = len(curr_print)
         else:
-            progress_bar.last_print_len = None
+            ProgressBar.last_print_len = None
         
         sys.stdout.write(curr_print)
         sys.stdout.flush()
@@ -206,6 +294,79 @@ class progress_bar:
         
         self._i += 1
 
+class FastTextUtility:
+    """
+    TODO
+    """
+
+    def __init__(self, vector_path):
+        """
+        TODO
+        """
+        
+        self.vector_path = vector_path
+
+        if os.path.isfile(self.vector_path) and self.vector_path.endswith(".vec"):
+            self.vector_dict, self.n, self.d = self.load_vectors(self.vector_path, return_dimension=True)
+    
+    @staticmethod
+    def load_vectors(fname, return_dimension=False):
+        """
+        TODO
+
+        References
+        ----------
+            https://fasttext.cc/docs/en/english-vectors.html
+        """
+        fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
+        n, d = map(int, fin.readline().split())
+        bar = ProgressBar(num_processes=n, task="Loading fastext vectors")
+
+        data = {}
+        for line in fin:
+            line = line.strip()
+
+            tokens = line.split()
+            data[tokens[0]] = [float(val) for val in tokens[1:]]
+
+            bar.update_progress()
+        if not return_dimension:
+            return data
+        else:
+            return data, n, d
+    
+    def compute_ngrams(self, token, min_n=3, max_n=6):
+        ngrams = []
+        for n in range(min_n, max_n + 1):
+            for i in range(len(token) - n + 1):
+                ngrams.append(token[i:i+n])
+        return ngrams
+
+    def get_vector(self, token, norm=False):
+        """
+        TODO
+
+        # testing pending
+        """
+        if token in self.vector_dict:
+            return np.array(self.vector_dict[token])
+        
+        vec = np.zeros(self.d)
+
+        ngrams_found = 0
+        ngrams = self.compute_ngrams(token)
+        for ngram in ngrams:
+            if ngram in self.vector_dict:
+                ngrams_found += 1
+                
+                ngram_vec = np.array(self.vector_dict[ngram])
+                ngram_weight = float(np.linalg.norm(ngram_vec)) if norm else 1
+                
+                vec = vec + (ngram_vec / ngram_weight)
+        
+        vec = vec / max(1, ngrams_found)
+        return vec
+
 class GloVeUtility:
     """
     TODO
@@ -215,7 +376,6 @@ class GloVeUtility:
         self.vector_path = vector_path
 
         filename = vector_path.split(os.path.sep)[-1]
-        
         vector_dims = [25, 50, 100, 200, 300]
         num_token_to_vocab_size = {
             6: int(400e3), # 400K
@@ -229,7 +389,7 @@ class GloVeUtility:
             if "{}d".format(dim) in filename:
                 self.d = dim
                 break
-
+        
         self.n = None
         for num in num_token_to_vocab_size:
             if "{}B".format(num) in filename:
@@ -239,15 +399,16 @@ class GloVeUtility:
         if os.path.isfile(self.vector_path):
             self.vector_dict = self.load_vectors(
                 self.vector_path,
-                self.d,
-                self.n
+                self.d
+            ) if filename.split('.')[-1]=="txt" else pickleload(
+                self.vector_path
             )
         else:
-            print("Vector path {} not found.".format(self.vector_path)) # change to logger error
+            print("Vector path {} not found.".format(self.vector_path))
             self.vector_dict = {}
     
     @staticmethod
-    def load_vectors(path, d, n=None):
+    def load_vectors(fname, d):
         """
         TODO
 
@@ -257,13 +418,8 @@ class GloVeUtility:
                 Jeffrey Pennington, Richard Socher, and Christopher D. Manning. 2014. GloVe: Global Vectors for Word Representation.
                 https://nlp.stanford.edu/pubs/glove.pdf
         """
-        fin = io.open(path, 'r', encoding='utf-8', newline='\n', errors='ignore')
-        
-        i=0
-        if n:
-            bar = progress_bar(n,"Loading glove vectors")
-        else:
-            progress_bar.std_print("Loading glove vectors . . . ", end='\r')
+        fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
+        ProgressBar.std_print("Loading glove vectors . . . ", end='\r')
         
         data = {}
         for line in fin:
@@ -272,15 +428,8 @@ class GloVeUtility:
             tokens = line.split()
             word = " ".join(tokens[0:len(tokens)-d])
             data[word] = np.array([float(val) for val in tokens[-d:]])
-
-            i+=1
-            if n:
-                bar.update_progress(i)
         
-        if not n:
-            progress_bar.std_print("Loading glove vectors compete.")
-        fin.close()
-        
+        ProgressBar.std_print("Loading glove vectors compete.")
         return data
 
     def compute_ngrams(self, token, min_n=2, max_n=8):
@@ -321,16 +470,15 @@ class GloVeUtility:
         oov_tokens = [token for token in tokens if token not in self.vector_dict.keys()]
         if as_set:
             return set(oov_tokens)
+        
         return oov_tokens
-
+    
     def add_replace_vectors(self, new_vector_dict):
         """
         TODO
         """
-        bar = progress_bar(len(new_vector_dict), "Adding/replacing vectors")
-        for i, token in enumerate(new_vector_dict):
+        for token in new_vector_dict.keys():
             self.vector_dict[token] = new_vector_dict[token]
-            bar.update_progress(i)
     
     def save_vectors(self, path):
         """
@@ -344,24 +492,25 @@ class GloVeUtility:
         if len(path_split) > 1:
             os.makedirs(os.path.sep.join(path_split[:-1]), exist_ok=True)
         
-        progress_bar.std_print("Saving glove vectors . . . ", end='\r')
+        ProgressBar.std_print("Saving glove vectors . . . ", end='\r')
         with open(path, 'w', encoding="utf-8") as f:
             for entry in vector_list:
                 f.write("{}\n".format(entry))
-        progress_bar.std_print("Saving glove vectors complete.")
+        ProgressBar.std_print("Saving glove vectors complete.")
 
-def read_txt(path):
+
+def read_txt(path: str) -> List:
     doc = []
     with open(path, mode='r', encoding="utf-8", errors="ignore") as f:
         doc = [line.strip() for line in f]
     return doc
 
-def write_txt(path, data):
+def write_txt(path: str, data: List) -> None:
     with open(path, mode='w', encoding="utf-8") as f:
         for entry in data:
             f.write("{}\n".format(entry))
 
-def process_text(text, lower=True, remove_stopwords=True, remove_punctuation=True):
+def process_text(text: str, lower=True, remove_stopwords=True, remove_punctuation=True) -> List[str]:
     if lower:
         text = text.lower()
     
@@ -377,14 +526,14 @@ def process_text(text, lower=True, remove_stopwords=True, remove_punctuation=Tru
     tokens = word_tokenize(text)
     return [token for token in tokens if token not in tokens_for_removal]
 
-def get_rare_tokens(tokens, min_freq, max_tokens=20000, return_non_rare=False):
+def get_rare_tokens(tokens: List, min_freq: int, max_tokens=20000, return_non_rare=False) -> Union[List, Optional[List]]:
     rare_tokens = []
     token_freq_tuples = []
 
     counts = Counter(tokens)
     for k in counts:
         count = counts[k]
-        if count>=min_freq:
+        if count >= min_freq:
             token_freq_tuples.append((k,count))
         else:
             rare_tokens.append(k)
@@ -392,7 +541,7 @@ def get_rare_tokens(tokens, min_freq, max_tokens=20000, return_non_rare=False):
     token_freq_tuples = sorted(token_freq_tuples, key=lambda x: x[1], reverse=True)
 
     selected_tokens = []
-    for i, (k,v) in enumerate(token_freq_tuples):
+    for i, k in enumerate(token_freq_tuples.keys()):
         if i < max_tokens:
             selected_tokens.append(k)
         else:
@@ -402,6 +551,6 @@ def get_rare_tokens(tokens, min_freq, max_tokens=20000, return_non_rare=False):
         return rare_tokens, selected_tokens
     return rare_tokens
 
-def filter_tokens(tokens, tokens_to_remove):
+def filter_tokens(tokens: str, tokens_to_remove: str) -> List[str]:
     tokens_to_remove = set(tokens_to_remove)
     return [token for token in tokens if token not in tokens_to_remove]

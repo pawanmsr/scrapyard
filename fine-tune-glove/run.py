@@ -3,7 +3,7 @@ import argparse
 from mittens import GloVe, Mittens
 from sklearn.feature_extraction.text import CountVectorizer
 
-from utils import GloVeUtility, progress_bar
+from utils import GloVeUtility, ProgressBar
 from utils import read_txt, write_txt, process_text, get_rare_tokens, filter_tokens
 
 def get_arguments():
