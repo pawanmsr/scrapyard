@@ -13,4 +13,4 @@ Training utility for glove vectors.
 Code Blocks
 -----------
 
-[Stack](/code-blocks/stack.py), [Trie](/code-blocks/trie.cpp) and more.
+Pre 2018 program files and unlisted paste backup. [Details](/code-blocks/README.md).
