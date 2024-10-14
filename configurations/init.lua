@@ -1,6 +1,10 @@
 -- disable compatibility to old-time vi
 vim.opt.compatible = false
 
+vim.cmd([[
+    " .vimrc
+]])
+
 require("plugins")
 
 local builtin = require('telescope.builtin')
