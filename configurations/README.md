@@ -8,9 +8,7 @@ Editor
 
 Checkout built-in user manual for scripting. Lua for Nvim.  
 
-- *.vimrc* -> *nvim/init.vim*  
-- *.vim* -> *nvim*
-
+- *.vimrc* -> *.config/nvim/init.vim* (or *init.lua*)  
 
 <details>
 <summary>Notes</summary>
@@ -20,3 +18,5 @@ Plugin manager requires independent installation but reduces effort in manual sc
 
 Sample: [.custom](/configurations/.custom/).
 </details>
+
+Lua5.4 and Vim-Plug. Prefer nvim build from source.  
