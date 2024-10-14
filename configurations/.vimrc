@@ -24,6 +24,11 @@ set title
 
 " Enable spell checking.
 set spell
+" Set highlight style underline
+hi clear SpellBad
+hi SpellBad cterm=underline
+" Set style for gVim
+hi SpellBad gui=undercurl
 
 " Display white-spaces.
 set list
@@ -75,4 +80,7 @@ set ruler
 set cursorline
 
 " Marker for cursor column.
-set cursorcolumn
+" set cursorcolumn
+
+" Plugins for vim.
+so ~/.vim/plugins.vim
