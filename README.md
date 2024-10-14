@@ -1,6 +1,7 @@
 Scrapyard
 =========
 
+References for personal use (@myself: delete or archive if not useful).  
 Code blocks that were useful long back (and may find use later).
 
 Fine Tune Glove
@@ -13,4 +14,5 @@ Training utility for glove vectors.
 Code Blocks
 -----------
 
-Pre 2018 program files and unlisted paste backup. [Details](/code-blocks/README.md).
+Old programs files, unlisted paste backup and references.  
+Links to problem solutions to revisit.
