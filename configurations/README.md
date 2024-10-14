@@ -19,5 +19,5 @@ Plugin manager requires independent installation but reduces effort in manual sc
 Sample: [.custom](/configurations/.custom/).
 </details>
 
-Lua5.4 and Vim-Plug. Prefer nvim build from source.  
+Lua5.4 and Vim-Plug. Prefer nvim build from source (switch to _stable_).  
 Use either [init.vim](/configurations/init.vim) or [init.lua](/configurations/init.lua) but not both.
