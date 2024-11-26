@@ -9,9 +9,9 @@ vim.cmd([[
 
 -- order sensitive
 require("plugins")
+require("telescope-keymap")
 
 require("rc")
 require("lsp")
-require("telescope")
 
 require('nvim-treesitter.configs').setup{highlight={enable=true}}
