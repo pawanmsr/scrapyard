@@ -10,7 +10,7 @@ Plug('preservim/nerdtree', {['on'] = 'NERDTreeToggle'})
 
 -- Required for language services
 Plug('autozimu/LanguageClient-neovim',
-    {['branch']: 'next', ['do']: 'bash install.sh'})
+    {['branch'] = 'next', ['do'] = 'bash install.sh'})
 
 -- Searching planets from telescope
 Plug('nvim-lua/plenary.nvim')
