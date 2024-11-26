@@ -5,6 +5,11 @@ vim.opt.compatible = false
 
 vim.cmd([[
     " .vimrc
+    syntax enable
+    filetype on
+    filetype indent on
+    hi clear SpellBad
+    hi SpellBad gui=undercurl
 ]])
 
 -- require is order sensitive
