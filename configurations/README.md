@@ -21,3 +21,14 @@ Sample: [.custom](/configurations/.custom/).
 
 Lua5.4 and Vim-Plug. Prefer nvim build from source (switch to _stable_).  
 Use either [init.vim](/configurations/init.vim) or [init.lua](/configurations/init.lua) but not both.
+
+Language Server
+---------------
+
+Use toolchain installer to install the language and tools.
+
+```shell
+# Example
+rustup component add rust-analyzer
+
+```

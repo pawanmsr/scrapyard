@@ -1,3 +1,5 @@
+-- ~/.config/nvim/init.lua
+
 -- disable compatibility to old-time vi
 vim.opt.compatible = false
 
@@ -5,6 +7,8 @@ vim.cmd([[
     " .vimrc
 ]])
 
+-- require is order sensitive
+require("rc")
 require("plugins")
 
 local builtin = require('telescope.builtin')
@@ -15,36 +19,4 @@ vim.keymap.set('n', '<leader>fh', builtin.help_tags, {desc = 'Telescope help tag
 
 require('nvim-treesitter.configs').setup{highlight={enable=true}}
 
-local lspconfig = require('lspconfig')
-
-local on_attach = function(client, bufnr)
-    -- code completion
-    require('completion').on_attach(client)
-    -- names, annotations et cetera
-    vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
-end
-
--- requires rust analyzer binaries
--- https://rust-analyzer.github.io/manual.html
--- #rust-analyzer-language-server-binary
-lspconfig.rust_analyzer.setup({
-    on_attach = on_attach,
-    settings = {
-        ["rust-analyzer"] = {
-            imports = {
-                granularity = {
-                    group = "module",
-                },
-                prefix = "self",
-            },
-            cargo = {
-                buildScripts = {
-                    enable = true,
-                },
-            },
-            procMacro = {
-                enable = true
-            },
-        }
-    }
-})
+require("lsp")
