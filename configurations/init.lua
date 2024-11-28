@@ -13,6 +13,8 @@ vim.cmd([[
     
     hi clear SpellBad
     hi SpellBad gui=undercurl
+
+    set clipboard+=unnamedplus
 ]])
 
 -- require is order sensitive
@@ -27,3 +29,4 @@ vim.keymap.set('n', '<leader>fh', builtin.help_tags, {desc = 'Telescope help tag
 
 require("highlighter")
 require("lsp")
+require("on-the-rocks")
