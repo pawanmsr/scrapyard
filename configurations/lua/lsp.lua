@@ -2,7 +2,7 @@ local lspconfig = require('lspconfig')
 
 local on_attach = function(client, bufnr)
     -- code completion
-    require('completion').on_attach(client)
+    -- require('completion').on_attach(client)
     -- names, annotations et cetera
     vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
 end
