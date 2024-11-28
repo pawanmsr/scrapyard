@@ -5,6 +5,16 @@ vim.opt.compatible = false
 
 vim.cmd([[
     " .vimrc
+    
+    " syntax enable
+    
+    filetype on
+    filetype indent on
+    
+    hi clear SpellBad
+    hi SpellBad gui=undercurl
+
+    set clipboard+=unnamedplus
 ]])
 
 -- require is order sensitive
@@ -17,6 +27,6 @@ vim.keymap.set('n', '<leader>fg', builtin.live_grep, {desc = 'Telescope live gre
 vim.keymap.set('n', '<leader>fb', builtin.buffers, {desc = 'Telescope buffers'})
 vim.keymap.set('n', '<leader>fh', builtin.help_tags, {desc = 'Telescope help tags'})
 
-require('nvim-treesitter.configs').setup{highlight={enable=true}}
-
+require("highlighter")
 require("lsp")
+require("on-the-rocks")

@@ -12,6 +12,9 @@ Plug('preservim/nerdtree', {['on'] = 'NERDTreeToggle'})
 Plug('autozimu/LanguageClient-neovim',
     {['branch'] = 'next', ['do'] = 'bash install.sh'})
 
+-- Debug adapter
+Plug('mfussenegger/nvim-dap')
+
 -- Searching planets from telescope
 Plug('nvim-lua/plenary.nvim')
 Plug('nvim-telescope/telescope.nvim', {['branch'] = '0.1.x'})
