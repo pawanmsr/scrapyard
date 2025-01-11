@@ -32,3 +32,13 @@ Use toolchain installer to install the language and tools.
 rustup component add rust-analyzer
 
 ```
+
+Correspondence between Centralised Version Control and Distributed Version Control (in order):
+
+Preference: Git.  
+
+- `checkout` : `clone`
+- `commit` : `commit` `push`
+- `cat` : `show`
+- `revert` : `reset` / `checkout`
+- `update` : `fetch` `pull`
